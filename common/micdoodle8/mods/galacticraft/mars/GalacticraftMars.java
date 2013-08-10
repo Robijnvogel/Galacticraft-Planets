@@ -130,6 +130,7 @@ public class GalacticraftMars
         MinecraftForge.EVENT_BUS.register(new GCMarsEvents());
         GalacticraftRegistry.registerTeleportType(GCMarsWorldProvider.class, new GCMoonTeleportType());
         GCMarsUtil.addSmeltingRecipes();
+        SchematicRegistry.registerSchematicRecipe(new GCMarsSchematicRocketT2());
         GalacticraftRegistry.registerCelestialBody(new GCMarsPlanet());
         this.registerTileEntities();
         this.registerCreatures();
