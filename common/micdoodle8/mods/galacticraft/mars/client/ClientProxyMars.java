@@ -112,7 +112,7 @@ public class ClientProxyMars extends CommonProxyMars
     @Override
     public void registerRenderInformation()
     {
-        IModelCustom model = AdvancedModelLoader.loadModel("/assets/galacticraftmars/models/chamber.obj");
+        IModelCustom model = AdvancedModelLoader.loadModel("/assets/galacticraftmars/textures/models/chamber.obj");
         ClientRegistry.bindTileEntitySpecialRenderer(GCMarsTileEntityTreasureChest.class, new GCMarsTileEntityTreasureChestRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(GCMarsTileEntityCryogenicChamber.class, new GCMarsTileEntityCryogenicChamberRenderer(model));
         RenderingRegistry.registerEntityRenderingHandler(GCMarsEntitySludgeling.class, new GCMarsRenderSludgeling());
