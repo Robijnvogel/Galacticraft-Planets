@@ -2,10 +2,12 @@ package micdoodle8.mods.galacticraft.mars.network;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import micdoodle8.mods.galacticraft.core.entities.GCCorePlayerMP;
 import micdoodle8.mods.galacticraft.core.util.PacketUtil;
 import micdoodle8.mods.galacticraft.core.util.PlayerUtil;
+import micdoodle8.mods.galacticraft.mars.GCMarsConfigManager;
+import micdoodle8.mods.galacticraft.mars.GalacticraftMars;
 import micdoodle8.mods.galacticraft.mars.entities.GCMarsEntitySlimeling;
+import micdoodle8.mods.galacticraft.mars.util.GCMarsUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -39,7 +41,7 @@ public class GCMarsPacketHandlerServer implements IPacketHandler
 
         final EntityPlayerMP player = (EntityPlayerMP) p;
 
-        final GCCorePlayerMP playerBase = PlayerUtil.getPlayerBaseServerFromPlayer(player);
+        PlayerUtil.getPlayerBaseServerFromPlayer(player);
 
         if (packetType == 0)
         {
@@ -47,13 +49,13 @@ public class GCMarsPacketHandlerServer implements IPacketHandler
             Object[] packetReadout = PacketUtil.readPacketData(data, decodeAs);
 
             Entity entity = player.worldObj.getEntityByID((Integer) packetReadout[0]);
-            
+
             if (entity instanceof GCMarsEntitySlimeling)
             {
                 GCMarsEntitySlimeling slimeling = (GCMarsEntitySlimeling) entity;
 
                 int subType = (Integer) packetReadout[1];
-                
+
                 switch (subType)
                 {
                 case 0:
@@ -61,9 +63,9 @@ public class GCMarsPacketHandlerServer implements IPacketHandler
                     {
                         slimeling.getAiSit().setSitting(!slimeling.isSitting());
                         slimeling.setJumping(false);
-                        slimeling.setPathToEntity((PathEntity)null);
-                        slimeling.setTarget((Entity)null);
-                        slimeling.setAttackTarget((EntityLivingBase)null);
+                        slimeling.setPathToEntity((PathEntity) null);
+                        slimeling.setTarget((Entity) null);
+                        slimeling.setAttackTarget((EntityLivingBase) null);
                     }
                     break;
                 case 1:
@@ -94,6 +96,12 @@ public class GCMarsPacketHandlerServer implements IPacketHandler
                     if (player.getCommandSenderName().equalsIgnoreCase(slimeling.getOwnerName()) && !slimeling.worldObj.isRemote)
                     {
                         slimeling.setEntityHealth(slimeling.func_110143_aJ() + 5.0F);
+                    }
+                    break;
+                case 6:
+                    if (player.getCommandSenderName().equalsIgnoreCase(slimeling.getOwnerName()) && !slimeling.worldObj.isRemote)
+                    {
+                        GCMarsUtil.openSlimelingInventory(player, slimeling);
                     }
                     break;
                 }

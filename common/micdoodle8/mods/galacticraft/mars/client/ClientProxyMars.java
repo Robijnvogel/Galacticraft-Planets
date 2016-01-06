@@ -3,28 +3,43 @@ package micdoodle8.mods.galacticraft.mars.client;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.util.EnumSet;
-import java.util.Random;
 import micdoodle8.mods.galacticraft.core.client.GCCoreCloudRenderer;
+import micdoodle8.mods.galacticraft.core.client.render.entities.GCCoreRenderOxygenBubble;
 import micdoodle8.mods.galacticraft.core.client.render.entities.GCCoreRenderSpaceship;
+import micdoodle8.mods.galacticraft.core.client.render.item.GCCoreItemRendererKey;
 import micdoodle8.mods.galacticraft.core.client.sounds.GCCoreSoundUpdaterSpaceship;
 import micdoodle8.mods.galacticraft.core.util.PacketUtil;
 import micdoodle8.mods.galacticraft.mars.CommonProxyMars;
+import micdoodle8.mods.galacticraft.mars.GCMarsConfigManager;
 import micdoodle8.mods.galacticraft.mars.GalacticraftMars;
 import micdoodle8.mods.galacticraft.mars.blocks.GCMarsBlocks;
 import micdoodle8.mods.galacticraft.mars.client.fx.GCMarsEntityDropParticleFX;
+import micdoodle8.mods.galacticraft.mars.client.gui.GCMarsGuiSlimelingInventory;
+import micdoodle8.mods.galacticraft.mars.client.gui.GCMarsGuiTerraformer;
 import micdoodle8.mods.galacticraft.mars.client.model.GCMarsModelSpaceshipTier2;
+import micdoodle8.mods.galacticraft.mars.client.render.block.GCMarsBlockRendererMachine;
 import micdoodle8.mods.galacticraft.mars.client.render.block.GCMarsBlockRendererRock;
+import micdoodle8.mods.galacticraft.mars.client.render.block.GCMarsBlockRendererTreasureChest;
 import micdoodle8.mods.galacticraft.mars.client.render.block.GCMarsBlockRendererVine;
+import micdoodle8.mods.galacticraft.mars.client.render.entity.GCMarsRenderCreeperBoss;
+import micdoodle8.mods.galacticraft.mars.client.render.entity.GCMarsRenderProjectileTNT;
 import micdoodle8.mods.galacticraft.mars.client.render.entity.GCMarsRenderSlimeling;
 import micdoodle8.mods.galacticraft.mars.client.render.entity.GCMarsRenderSludgeling;
+import micdoodle8.mods.galacticraft.mars.client.render.item.GCMarsItemRendererMachine;
 import micdoodle8.mods.galacticraft.mars.client.render.item.GCMarsItemRendererSpaceshipT2;
+import micdoodle8.mods.galacticraft.mars.client.render.tile.GCMarsTileEntityCryogenicChamberRenderer;
 import micdoodle8.mods.galacticraft.mars.client.render.tile.GCMarsTileEntityTreasureChestRenderer;
 import micdoodle8.mods.galacticraft.mars.client.sounds.GCMarsSounds;
 import micdoodle8.mods.galacticraft.mars.dimension.GCMarsWorldProvider;
+import micdoodle8.mods.galacticraft.mars.entities.GCMarsEntityCreeperBoss;
+import micdoodle8.mods.galacticraft.mars.entities.GCMarsEntityProjectileTNT;
 import micdoodle8.mods.galacticraft.mars.entities.GCMarsEntityRocketT2;
 import micdoodle8.mods.galacticraft.mars.entities.GCMarsEntitySlimeling;
 import micdoodle8.mods.galacticraft.mars.entities.GCMarsEntitySludgeling;
+import micdoodle8.mods.galacticraft.mars.entities.GCMarsEntityTerraformBubble;
 import micdoodle8.mods.galacticraft.mars.items.GCMarsItems;
+import micdoodle8.mods.galacticraft.mars.tile.GCMarsTileEntityCryogenicChamber;
+import micdoodle8.mods.galacticraft.mars.tile.GCMarsTileEntityTerraformer;
 import micdoodle8.mods.galacticraft.mars.tile.GCMarsTileEntityTreasureChest;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
@@ -34,8 +49,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.INetworkManager;
 import net.minecraft.network.packet.Packet250CustomPayload;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraftforge.client.model.AdvancedModelLoader;
+import net.minecraftforge.client.model.IModelCustom;
 import net.minecraftforge.common.MinecraftForge;
 import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.client.registry.ClientRegistry;
@@ -60,28 +79,29 @@ import cpw.mods.fml.relauncher.Side;
 public class ClientProxyMars extends CommonProxyMars
 {
     private static int vineRenderID;
-    private static int rockRenderID;
-    public static long getFirstBootTime;
-    public static long getCurrentTime;
-    private final Random rand = new Random();
+    private static int eggRenderID;
+    private static int treasureRenderID;
+    private static int machineRenderID;
 
     @Override
     public void preInit(FMLPreInitializationEvent event)
     {
         MinecraftForge.EVENT_BUS.register(new GCMarsSounds());
-        ClientProxyMars.getFirstBootTime = System.currentTimeMillis();
     }
 
     @Override
     public void init(FMLInitializationEvent event)
     {
         TickRegistry.registerTickHandler(new TickHandlerClient(), Side.CLIENT);
-        ClientRegistry.bindTileEntitySpecialRenderer(GCMarsTileEntityTreasureChest.class, new GCMarsTileEntityTreasureChestRenderer());
-        NetworkRegistry.instance().registerChannel(new ClientPacketHandler(), "GalacticraftMars", Side.CLIENT);
+        NetworkRegistry.instance().registerChannel(new ClientPacketHandler(), GalacticraftMars.CHANNEL, Side.CLIENT);
         ClientProxyMars.vineRenderID = RenderingRegistry.getNextAvailableRenderId();
         RenderingRegistry.registerBlockHandler(new GCMarsBlockRendererVine(ClientProxyMars.vineRenderID));
-        ClientProxyMars.rockRenderID = RenderingRegistry.getNextAvailableRenderId();
-        RenderingRegistry.registerBlockHandler(new GCMarsBlockRendererRock(ClientProxyMars.rockRenderID));
+        ClientProxyMars.eggRenderID = RenderingRegistry.getNextAvailableRenderId();
+        RenderingRegistry.registerBlockHandler(new GCMarsBlockRendererRock(ClientProxyMars.eggRenderID));
+        ClientProxyMars.treasureRenderID = RenderingRegistry.getNextAvailableRenderId();
+        RenderingRegistry.registerBlockHandler(new GCMarsBlockRendererTreasureChest(ClientProxyMars.treasureRenderID));
+        ClientProxyMars.machineRenderID = RenderingRegistry.getNextAvailableRenderId();
+        RenderingRegistry.registerBlockHandler(new GCMarsBlockRendererMachine(ClientProxyMars.machineRenderID));
     }
 
     @Override
@@ -92,11 +112,19 @@ public class ClientProxyMars extends CommonProxyMars
     @Override
     public void registerRenderInformation()
     {
+        IModelCustom model = AdvancedModelLoader.loadModel("/assets/galacticraftmars/textures/models/chamber.obj");
+        ClientRegistry.bindTileEntitySpecialRenderer(GCMarsTileEntityTreasureChest.class, new GCMarsTileEntityTreasureChestRenderer());
+        ClientRegistry.bindTileEntitySpecialRenderer(GCMarsTileEntityCryogenicChamber.class, new GCMarsTileEntityCryogenicChamberRenderer(model));
         RenderingRegistry.registerEntityRenderingHandler(GCMarsEntitySludgeling.class, new GCMarsRenderSludgeling());
         RenderingRegistry.registerEntityRenderingHandler(GCMarsEntitySlimeling.class, new GCMarsRenderSlimeling());
+        RenderingRegistry.registerEntityRenderingHandler(GCMarsEntityCreeperBoss.class, new GCMarsRenderCreeperBoss());
         RenderingRegistry.registerEntityRenderingHandler(GCMarsEntityRocketT2.class, new GCCoreRenderSpaceship(new GCMarsModelSpaceshipTier2(), GalacticraftMars.TEXTURE_DOMAIN, "rocketT2"));
+        RenderingRegistry.registerEntityRenderingHandler(GCMarsEntityTerraformBubble.class, new GCCoreRenderOxygenBubble(0.25F, 1.0F, 0.25F));
+        RenderingRegistry.registerEntityRenderingHandler(GCMarsEntityProjectileTNT.class, new GCMarsRenderProjectileTNT());
         RenderingRegistry.addNewArmourRendererPrefix("desh");
         MinecraftForgeClient.registerItemRenderer(GCMarsItems.spaceship.itemID, new GCMarsItemRendererSpaceshipT2(new GCMarsEntityRocketT2(FMLClientHandler.instance().getClient().theWorld), new GCMarsModelSpaceshipTier2(), new ResourceLocation(GalacticraftMars.TEXTURE_DOMAIN, "textures/model/rocketT2.png")));
+        MinecraftForgeClient.registerItemRenderer(GCMarsItems.key.itemID, new GCCoreItemRendererKey(new ResourceLocation(GalacticraftMars.TEXTURE_DOMAIN, "textures/model/treasure.png")));
+        MinecraftForgeClient.registerItemRenderer(GCMarsBlocks.machine.blockID, new GCMarsItemRendererMachine(model));
     }
 
     @Override
@@ -104,11 +132,23 @@ public class ClientProxyMars extends CommonProxyMars
     {
         return ClientProxyMars.vineRenderID;
     }
+
+    @Override
+    public int getEggRenderID()
+    {
+        return ClientProxyMars.eggRenderID;
+    }
+
+    @Override
+    public int getTreasureRenderID()
+    {
+        return ClientProxyMars.treasureRenderID;
+    }
     
     @Override
-    public int getRockRenderID()
+    public int getMachineRenderID()
     {
-        return ClientProxyMars.rockRenderID;
+        return ClientProxyMars.machineRenderID;
     }
 
     @Override
@@ -149,9 +189,27 @@ public class ClientProxyMars extends CommonProxyMars
         {
             final DataInputStream data = new DataInputStream(new ByteArrayInputStream(packet.data));
             final int packetType = PacketUtil.readPacketID(data);
+            EntityPlayer player = (EntityPlayer) p;
+            
             if (packetType == 0)
             {
+                final Class<?>[] decodeAs = { Integer.class, Integer.class, Integer.class };
+                final Object[] packetReadout = PacketUtil.readPacketData(data, decodeAs);
 
+                switch ((Integer)packetReadout[1])
+                {
+                case 0:
+                    int entityID = (Integer) packetReadout[2];
+                    Entity entity = player.worldObj.getEntityByID(entityID);
+
+                    if (entity != null && entity instanceof GCMarsEntitySlimeling)
+                    {
+                        FMLClientHandler.instance().getClient().displayGuiScreen(new GCMarsGuiSlimelingInventory(player, (GCMarsEntitySlimeling) entity));
+                    }
+
+                    player.openContainer.windowId = (Integer) packetReadout[0];
+                    break;
+                }
             }
         }
     }
@@ -181,8 +239,6 @@ public class ClientProxyMars extends CommonProxyMars
         @Override
         public void tickStart(EnumSet<TickType> type, Object... tickData)
         {
-            ClientProxyMars.getCurrentTime = System.currentTimeMillis();
-
             final Minecraft minecraft = FMLClientHandler.instance().getClient();
 
             final WorldClient world = minecraft.theWorld;
@@ -197,7 +253,7 @@ public class ClientProxyMars extends CommonProxyMars
                         {
                             world.provider.setSkyRenderer(new GCMarsSkyProvider());
                         }
-                        
+
                         if (world.provider.getCloudRenderer() == null)
                         {
                             world.provider.setCloudRenderer(new GCCoreCloudRenderer());
@@ -241,5 +297,21 @@ public class ClientProxyMars extends CommonProxyMars
         {
             return EnumSet.of(TickType.CLIENT);
         }
+    }
+
+    @Override
+    public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
+    {
+        TileEntity tile = world.getBlockTileEntity(x, y, z);
+        
+        if (ID == GCMarsConfigManager.idGuiMachine)
+        {
+            if (tile instanceof GCMarsTileEntityTerraformer)
+            {
+                return new GCMarsGuiTerraformer(player.inventory, (GCMarsTileEntityTerraformer) tile);
+            }
+        }
+        
+        return null;
     }
 }

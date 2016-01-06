@@ -5,10 +5,12 @@ import micdoodle8.mods.galacticraft.core.client.ClientProxyCore;
 import micdoodle8.mods.galacticraft.mars.GalacticraftMars;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumRarity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Icon;
+import cpw.mods.fml.common.registry.LanguageRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -20,13 +22,12 @@ import cpw.mods.fml.relauncher.SideOnly;
  */
 public class GCMarsItem extends Item
 {
-    public static String[] names = { "rawDesh", "deshStick", "ingotDesh" };
+    public static String[] names = { "rawDesh", "deshStick", "ingotDesh", "reinforcedPlateT2", "slimelingCargo" };
     protected Icon[] icons = new Icon[GCMarsItem.names.length];
 
     public GCMarsItem(int par1)
     {
         super(par1);
-        this.setMaxStackSize(1);
         this.setMaxDamage(0);
         this.setHasSubtypes(true);
     }
@@ -85,6 +86,16 @@ public class GCMarsItem extends Item
         }
 
         return "unnamed";
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, List par3List, boolean par4)
+    {
+        if (par1ItemStack != null && par1ItemStack.getItemDamage() == 3)
+        {
+            par3List.add(LanguageRegistry.instance().getStringLocalization("item.tier2.desc"));
+        }
     }
 
     @Override

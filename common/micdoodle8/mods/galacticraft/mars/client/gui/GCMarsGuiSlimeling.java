@@ -28,24 +28,29 @@ public class GCMarsGuiSlimeling extends GuiScreen
     private final GCMarsEntitySlimeling slimeling;
 
     public static RenderItem drawItems = new RenderItem();
-    
+
     public long timeBackspacePressed;
     public int cursorPulse;
     public int backspacePressed;
     public boolean isTextFocused = false;
     public int incorrectUseTimer;
-    
+
     public GuiButton stayButton;
-    
+
     public static boolean renderingOnGui = false;
     
+    private int invX;
+    private int invY;
+    private final int invWidth = 18;
+    private final int invHeight = 18;
+
     public GCMarsGuiSlimeling(GCMarsEntitySlimeling slimeling)
     {
         this.slimeling = slimeling;
         this.xSize = 176;
         this.ySize = 147;
     }
-    
+
     @Override
     public void initGui()
     {
@@ -53,9 +58,11 @@ public class GCMarsGuiSlimeling extends GuiScreen
         this.buttonList.clear();
         final int var5 = (this.width - this.xSize) / 2;
         final int var6 = (this.height - this.ySize) / 2;
-        this.stayButton = new GuiButton(0, var5 + 120, var6 + 102, 50, 20, "Stay");
+        this.stayButton = new GuiButton(0, var5 + 120, var6 + 122, 50, 20, "Stay");
         this.stayButton.enabled = this.mc.thePlayer.username.equals(this.slimeling.getOwnerName());
         this.buttonList.add(this.stayButton);
+        this.invX = var5 + 151;
+        this.invY = var6 + 76;
     }
 
     @Override
@@ -75,11 +82,11 @@ public class GCMarsGuiSlimeling extends GuiScreen
 
         if (keyID == Keyboard.KEY_BACK)
         {
-            if (slimeling.getName().length() > 0)
+            if (this.slimeling.getName().length() > 0)
             {
-                if (mc.thePlayer.username.equals(this.slimeling.getOwnerName()))
+                if (this.mc.thePlayer.username.equals(this.slimeling.getOwnerName()))
                 {
-                    slimeling.setName(slimeling.getName().substring(0, slimeling.getName().length() - 1));
+                    this.slimeling.setName(this.slimeling.getName().substring(0, this.slimeling.getName().length() - 1));
                     this.timeBackspacePressed = System.currentTimeMillis();
                 }
                 else
@@ -97,12 +104,12 @@ public class GCMarsGuiSlimeling extends GuiScreen
                 pastestring = "";
             }
 
-            if (this.isValid(slimeling.getName() + pastestring))
+            if (this.isValid(this.slimeling.getName() + pastestring))
             {
-                if (mc.thePlayer.username.equals(this.slimeling.getOwnerName()))
+                if (this.mc.thePlayer.username.equals(this.slimeling.getOwnerName()))
                 {
-                    slimeling.setName(slimeling.getName() + pastestring);
-                    slimeling.setName(slimeling.getName().substring(0, Math.min(slimeling.getName().length(), 16)));
+                    this.slimeling.setName(this.slimeling.getName() + pastestring);
+                    this.slimeling.setName(this.slimeling.getName().substring(0, Math.min(this.slimeling.getName().length(), 16)));
                 }
                 else
                 {
@@ -110,21 +117,21 @@ public class GCMarsGuiSlimeling extends GuiScreen
                 }
             }
         }
-        else if (this.isValid(slimeling.getName() + keyChar))
+        else if (this.isValid(this.slimeling.getName() + keyChar))
         {
-            if (mc.thePlayer.username.equals(this.slimeling.getOwnerName()))
+            if (this.mc.thePlayer.username.equals(this.slimeling.getOwnerName()))
             {
-                slimeling.setName(slimeling.getName() + keyChar);
-                slimeling.setName(slimeling.getName().substring(0, Math.min(slimeling.getName().length(), 16)));
+                this.slimeling.setName(this.slimeling.getName() + keyChar);
+                this.slimeling.setName(this.slimeling.getName().substring(0, Math.min(this.slimeling.getName().length(), 16)));
             }
             else
             {
                 this.incorrectUseTimer = 10;
             }
         }
-        
+
         PacketDispatcher.sendPacketToServer(PacketUtil.createPacket(GalacticraftMars.CHANNEL, 0, new Object[] { this.slimeling.entityId, 1, this.slimeling.getName() }));
-        
+
         super.keyTyped(keyChar, keyID);
     }
 
@@ -153,7 +160,7 @@ public class GCMarsGuiSlimeling extends GuiScreen
         final int var5 = (this.width - this.xSize) / 2;
         final int var6 = (this.height - this.ySize) / 2;
         final int startX = -20 + var5 + 60;
-        final int startY = 45 + var6 - 13;
+        final int startY = 65 + var6 - 13;
         final int width = this.xSize - 45;
         final int height = 18;
 
@@ -165,6 +172,11 @@ public class GCMarsGuiSlimeling extends GuiScreen
         else
         {
             this.isTextFocused = false;
+        }
+        
+        if (px >= this.invX && px < this.invX + this.invWidth && py >= this.invY && py < this.invY + this.invHeight)
+        {
+            PacketDispatcher.sendPacketToServer(PacketUtil.createPacket(GalacticraftMars.CHANNEL, 0, new Object[] { this.slimeling.entityId, 6, "" }));
         }
 
         super.mouseClicked(px, py, par3);
@@ -178,43 +190,47 @@ public class GCMarsGuiSlimeling extends GuiScreen
 
         GL11.glPushMatrix();
         GL11.glTranslatef(0, 0, -70.0F);
-        Gui.drawRect(var5, var6 - 20, var5 + this.xSize, var6 + this.ySize - 20, 0xFF000000);
+        Gui.drawRect(var5, var6, var5 + this.xSize, var6 + this.ySize - 20, 0xFF000000);
         GL11.glPopMatrix();
-        
-        int yOffset = (int)Math.floor(30.0D * (1.0F - this.slimeling.getScale()));
-        
-        drawSlimelingOnGui(this, this.slimeling, this.width / 2, var6 + 42 - yOffset, 70, var5 + 51 - par1, var6 + 75 - 50 - par2);
+
+        int yOffset = (int) Math.floor(30.0D * (1.0F - this.slimeling.getScale()));
+
+        GCMarsGuiSlimeling.drawSlimelingOnGui(this, this.slimeling, this.width / 2, var6 + 62 - yOffset, 70, var5 + 51 - par1, var6 + 75 - 50 - par2);
 
         GL11.glPushMatrix();
         GL11.glTranslatef(0, 0, 150.0F);
         this.mc.renderEngine.func_110577_a(slimelingPanelGui);
-        this.drawTexturedModalRect(var5, var6 - 20, 0, 0, this.xSize, this.ySize);
-        this.drawTexturedModalRect(var5 + this.xSize - 15, var6 - 11, 176, 0, 9, 9);
-        this.drawTexturedModalRect(var5 + this.xSize - 15, var6 + 2, 185, 0, 9, 9);
-        this.drawTexturedModalRect(var5 + this.xSize - 15, var6 + 15, 194, 0, 9, 9);
+        this.drawTexturedModalRect(var5, var6, 0, 0, this.xSize, this.ySize);
+        this.drawTexturedModalRect(var5 + this.xSize - 15, var6 + 9, 176, 0, 9, 9);
+        this.drawTexturedModalRect(var5 + this.xSize - 15, var6 + 22, 185, 0, 9, 9);
+        this.drawTexturedModalRect(var5 + this.xSize - 15, var6 + 35, 194, 0, 9, 9);
         String str = "" + Math.round(this.slimeling.getColorRed() * 1000) / 10.0F + "% ";
-        this.drawString(this.fontRenderer, str, var5 + this.xSize - 15 - this.fontRenderer.getStringWidth(str), var6 - 10, GCCoreUtil.convertTo32BitColor(255, 255, 0, 0));
+        this.drawString(this.fontRenderer, str, var5 + this.xSize - 15 - this.fontRenderer.getStringWidth(str), var6 + 10, GCCoreUtil.convertTo32BitColor(255, 255, 0, 0));
         str = "" + Math.round(this.slimeling.getColorGreen() * 1000) / 10.0F + "% ";
-        this.drawString(this.fontRenderer, str, var5 + this.xSize - 15 - this.fontRenderer.getStringWidth(str), var6 + 3, GCCoreUtil.convertTo32BitColor(255, 0, 0, 255));
+        this.drawString(this.fontRenderer, str, var5 + this.xSize - 15 - this.fontRenderer.getStringWidth(str), var6 + 23, GCCoreUtil.convertTo32BitColor(255, 0, 0, 255));
         str = "" + Math.round(this.slimeling.getColorBlue() * 1000) / 10.0F + "% ";
-        this.drawString(this.fontRenderer, str, var5 + this.xSize - 15 - this.fontRenderer.getStringWidth(str), var6 + 16, GCCoreUtil.convertTo32BitColor(255, 0, 255, 0));
+        this.drawString(this.fontRenderer, str, var5 + this.xSize - 15 - this.fontRenderer.getStringWidth(str), var6 + 36, GCCoreUtil.convertTo32BitColor(255, 0, 255, 0));
+
+        this.mc.renderEngine.func_110577_a(GCMarsGuiSlimeling.slimelingPanelGui);
+        GL11.glColor3f(1.0F, 1.0F, 1.0F);
+        this.drawTexturedModalRect(this.invX, this.invY, 176, 9, this.invWidth, this.invHeight);
         
         super.drawScreen(par1, par2, par3);
 
         this.cursorPulse++;
-        
+
         if (this.timeBackspacePressed > 0)
         {
             if (Keyboard.isKeyDown(Keyboard.KEY_BACK) && this.slimeling.getName().length() > 0)
             {
-                if (System.currentTimeMillis() - this.timeBackspacePressed > 200 / (1 + this.backspacePressed * 0.3F) && mc.thePlayer.username.equals(this.slimeling.getOwnerName()))
+                if (System.currentTimeMillis() - this.timeBackspacePressed > 200 / (1 + this.backspacePressed * 0.3F) && this.mc.thePlayer.username.equals(this.slimeling.getOwnerName()))
                 {
                     this.slimeling.setName(this.slimeling.getName().substring(0, this.slimeling.getName().length() - 1));
                     PacketDispatcher.sendPacketToServer(PacketUtil.createPacket(GalacticraftMars.CHANNEL, 0, new Object[] { this.slimeling.entityId, 1, this.slimeling.getName() }));
                     this.timeBackspacePressed = System.currentTimeMillis();
                     this.backspacePressed++;
                 }
-                else if (!mc.thePlayer.username.equals(this.slimeling.getOwnerName()))
+                else if (!this.mc.thePlayer.username.equals(this.slimeling.getOwnerName()))
                 {
                     this.incorrectUseTimer = 10;
                 }
@@ -225,14 +241,14 @@ public class GCMarsGuiSlimeling extends GuiScreen
                 this.backspacePressed = 0;
             }
         }
-        
+
         if (this.incorrectUseTimer > 0)
         {
             this.incorrectUseTimer--;
         }
-        
+
         final int dX = -45;
-        final int dY = 45;
+        final int dY = 65;
 
         final int startX = -20 + var5 + 60;
         final int startY = dY + var6 - 10;
@@ -243,19 +259,20 @@ public class GCMarsGuiSlimeling extends GuiScreen
         this.drawString(this.fontRenderer, this.slimeling.getName() + (this.cursorPulse / 24 % 2 == 0 && this.isTextFocused ? "_" : ""), startX + 4, startY + 4, this.incorrectUseTimer > 0 ? GCCoreUtil.convertTo32BitColor(255, 255, 20, 20) : 0xe0e0e0);
 
         this.stayButton.displayString = this.slimeling.isSitting() ? "Follow" : "Sit";
-        
+
         this.fontRenderer.drawString("Name: ", dX + var5 + 55, dY + var6 - 6, 0x404040);
         this.fontRenderer.drawString("Owner: " + this.slimeling.getOwnerName(), dX + var5 + 55, dY + var6 + 7, 0x404040);
         this.fontRenderer.drawString("Kills: " + this.slimeling.getKillCount(), dX + var5 + 55, dY + var6 + 20, 0x404040);
-        this.fontRenderer.drawString("Scale: " + (Math.round((this.slimeling.getAge() / (float)this.slimeling.MAX_AGE) * 1000.0F) / 10.0F) + "%", dX + var5 + 55, dY + var6 + 33, 0x404040);
+        this.fontRenderer.drawString("Scale: " + Math.round(this.slimeling.getAge() / (float) this.slimeling.MAX_AGE * 1000.0F) / 10.0F + "%", dX + var5 + 55, dY + var6 + 33, 0x404040);
         str = "" + (this.slimeling.isSitting() ? "Sitting" : "Following");
-        this.fontRenderer.drawString(str, var5 + 145 - this.fontRenderer.getStringWidth(str) / 2, var6 + 92, 0x404040);
-        str = "Attack Damage: " + Math.round(slimeling.getDamage() * 100.0F) / 100.0F;
+        this.fontRenderer.drawString(str, var5 + 145 - this.fontRenderer.getStringWidth(str) / 2, var6 + 112, 0x404040);
+        str = "Attack Damage: " + Math.round(this.slimeling.getDamage() * 100.0F) / 100.0F;
         this.fontRenderer.drawString(str, dX + var5 + 55, dY + var6 + 33 + 13, 0x404040);
         str = "Favorite Food: ";
         this.fontRenderer.drawString(str, dX + var5 + 55, dY + var6 + 46 + 13, 0x404040);
 
         GCMarsGuiSlimeling.drawItems.renderItemAndEffectIntoGUI(this.fontRenderer, this.mc.renderEngine, new ItemStack(Item.itemsList[this.slimeling.getFavoriteFood()]), dX + var5 + 55 + this.fontRenderer.getStringWidth(str), dY + var6 + 41 + 14);
+
         GL11.glPopMatrix();
     }
 
